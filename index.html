@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Moments App Replica</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.3/dist/cdn.min.js"></script>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&family=Patrick+Hand&family=Fredoka:wght@700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <style>
+        body {
+            background-color: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            font-family: 'SF Pro Rounded', 'ui-rounded', 'Nunito', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+        .post-gap { margin-bottom: 2.7rem; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; overflow-x: hidden; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .dot-pattern {
+            background-color: #f9f9f9;
+            background-image: radial-gradient(#eeebe9 1.5px, transparent 1.5px);
+            background-size: 50px 50px;
+        }
+        .font-hand { 
+            font-family: 'Patrick Hand', cursive; 
+            font-weight: 400;
+            letter-spacing: 0.5px; 
+        }
+        .phone-shadow {
+            box-shadow: 0 0 0 10px #222, 0 20px 50px -10px rgba(0,0,0,0.3);
+        }
+
+        .number-stroke {
+            color: #564538;
+            -webkit-text-stroke: 4px #FFF;
+            paint-order: stroke fill;
+            font-size: 12px; 
+            font-weight: bold;
+        }
+        .custom-dash-border {
+            background-image: url("data:image/svg+xml,%3csvg width='100%25' height='100%25' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='100%25' height='100%25' fill='none' rx='30' ry='30' stroke='%230000001A' stroke-width='4' stroke-dasharray='2%2c 8' stroke-dashoffset='0' stroke-linecap='square'/%3e%3c/svg%3e");
+        }
+        .jelly-bounce {
+            transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.5);
+            transform-origin: center center;
+            transform: rotate(var(--tw-rotate)) scale(1); 
+        }
+        .jelly-bounce:active {
+            transform: rotate(var(--tw-rotate)) scale(0.8) !important; 
+            transition: transform 0.1s ease-out;
+        }
+
+        @keyframes sticker-smash {
+            0% { transform: scale(0) rotate(0deg); opacity: 0; }
+            50% { transform: scale(1.4) rotate(var(--smash-rot)); opacity: 1; }
+            75% { transform: scale(0.9) rotate(var(--smash-rot)); }
+            100% { transform: scale(1) rotate(var(--smash-rot)); opacity: 1; }
+        }
+        .animate-smash {
+            animation: sticker-smash 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+            filter: drop-shadow(0 10px 15px rgba(0,0,0,0.2)); 
+            transition: opacity 1.5s cubic-bezier(0.4, 0, 0.2, 1), 
+                        transform 1.5s cubic-bezier(0.4, 0, 0.2, 1), 
+                        filter 1.5s cubic-bezier(0.4, 0, 0.2, 1);
+            will-change: transform, opacity, filter;
+        }
+        .smash-fade-out {
+            opacity: 0.6 !important;
+            z-index: 0 !important;
+            transform: scale(0.85) rotate(var(--smash-rot)) !important;
+            filter: blur(0.5px) brightness(0.95) drop-shadow(0 0 0 rgba(0,0,0,0));
+        }
+
+        .ease-cute { transition-timing-function: cubic-bezier(0.34, 1.56, 0.64, 1); }
+        .key-active:active { background-color: #e5e7eb !important; transform: scale(0.95); }
+        .key-special-active:active { background-color: #ffffff !important; transform: scale(0.95); }
+/* --- 新增：动态渐变 Placeholder 样式 --- */
+        /* --- 修改后的 Mesh Gradient 样式 --- */
+@keyframes mesh-animation {
+    0% { background-position: 0% 0%, 0% 0%, 0% 0%; }
+    50% { background-position: 100% 100%, 50% 0%, 0% 100%; }
+    100% { background-position: 0% 0%, 0% 0%, 0% 0%; }
+}
+
+.dynamic-placeholder-bg {
+    background-color: #BDD3FF; /* 基础底色 */
+    background-image: 
+        radial-gradient(at 0% 0%, #B9D3FF 0px, transparent 50%),
+                radial-gradient(at 100% 0%, #E3D6FE 0px, transparent 100%),
+                radial-gradient(at 100% 100%, #FCDDEF 0px, transparent 100%),
+                radial-gradient(at 0% 100%, #FEE7CF 0px, transparent 100%);
+}
+@keyframes float-center-loading {
+    0%, 100% { transform: translateY(0px) scale(1); }
+    50% { transform: translateY(-10px) scale(1.05); }
+}
+@keyframes float-left-loading {
+    0%, 100% { transform: translate(0px, 0px) rotate(-5deg); }
+    50% { transform: translate(-10px, -10px) rotate(10deg) scale(1.1); }
+}
+@keyframes float-right-loading {
+    0%, 100% { transform: translate(0px, 0px) rotate(5deg); }
+    50% { transform: translate(10px, -10px) rotate(-10deg) scale(1.1); }
+}
+
+.animate-float-center { animation: float-center-loading 3.5s ease-in-out infinite; }
+.animate-float-left { animation: float-left-loading 2.8s ease-in-out infinite; }
+.animate-float-right { animation: float-right-loading 3.1s ease-in-out infinite; }
+
+.loading-img {
+    position: absolute;
+    object-fit: contain;
+    will-change: transform;
+}
+    </style>
+</head>
+<body>
+
+    <div class="relative w-[390px] h-[844px] bg-black rounded-[55px] phone-shadow overflow-hidden ring-8 ring-gray-900"
+         x-data="feedData()">
+        
+        <div class="w-full h-full bg-[#fcfcfc] dot-pattern relative overflow-y-scroll no-scrollbar pt-12 pb-24">
+            
+            <div class="absolute top-0 w-full h-[47px] flex justify-between items-center px-[20px] z-[60] bg-gradient-to-b from-white/90 to-transparent pointer-events-none select-none">
+                <span class="text-black text-[15px] font-[600] tracking-wide pt-2 pl-1">3:48</span>
+                <div class="flex items-center gap-1.5 pt-2 pr-1">
+                    <svg width="18" height="12" viewBox="0 0 18 12" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M1 9.5C1 8.94772 1.44772 8.5 2 8.5C2.55228 8.5 3 8.94772 3 9.5V10.5C3 11.0523 2.55228 11.5 2 11.5C1.44772 11.5 1 11.0523 1 10.5V9.5Z" fill="#000"/><path d="M5.5 7C5.5 6.44772 5.94772 6 6.5 6C7.05228 6 7.5 6.44772 7.5 7V10.5C7.5 11.0523 7.05228 11.5 6.5 11.5C5.94772 11.5 5.5 11.0523 5.5 10.5V7Z" fill="#000"/><path d="M10 4.5C10 3.94772 10.4477 3.5 11 3.5C11.5523 3.5 12 3.94772 12 4.5V10.5C12 11.0523 11.5523 11.5 11 11.5C10.4477 11.5 10 11.0523 10 10.5V4.5Z" fill="#000"/><path d="M14.5 2C14.5 1.44772 14.9477 1 15.5 1C16.0523 1 16.5 1.44772 16.5 2V10.5C16.5 11.0523 16.0523 11.5 15.5 11.5C14.9477 11.5 14.5 11.0523 14.5 10.5V2Z" fill="#000"/></svg>
+                    <svg width="17" height="12" viewBox="0 0 17 12" fill="none" xmlns="http://www.w3.org/2000/svg" class="-ml-0.5"><path fill-rule="evenodd" clip-rule="evenodd" d="M8.49886 1.76676C5.57946 1.76676 2.92374 2.87321 0.902227 4.70884L0.893276 4.71701C0.589849 4.99611 0.589849 5.45239 0.897367 5.73149L2.26477 6.97233C2.56916 7.24861 3.06021 7.24861 3.3646 6.97233C4.70586 5.75501 6.51676 5.00009 8.49886 5.00009C10.481 5.00009 12.2919 5.75501 13.6331 6.97233C13.9375 7.24861 14.4286 7.24861 14.733 6.97233L16.1004 5.73149C16.4079 5.45239 16.4079 4.99611 16.1044 4.71701L16.0955 4.70884C14.074 2.87321 11.4183 1.76676 8.49886 1.76676ZM8.49886 6.75009C7.03964 6.75009 5.70271 7.28821 4.67389 8.18321L8.14041 11.3297C8.33835 11.5093 8.65937 11.5093 8.85731 11.3297L12.3238 8.18321C11.295 7.28821 9.95808 6.75009 8.49886 6.75009Z" fill="#000"/></svg>
+                    <div class="relative w-[25px] h-[12px]"><div class="absolute inset-0 rounded-[4px] border-[1px] border-black/30 w-full h-full"></div><div class="absolute top-[2px] left-[2px] bottom-[2px] w-[14px] bg-black rounded-[2px]"></div><div class="absolute -right-[2px] top-1/2 -translate-y-1/2 w-[2px] h-[4px] bg-black/30 rounded-r-[1px]"></div></div>
+                </div>
+            </div>
+
+            <header class="flex justify-between items-center px-[20px] mt-2 mb-4">
+                <h1 class="text-[22px] font-[800] tracking-[0.01em] text-gray-900">moments</h1>
+                <div class="flex gap-5 text-gray-800">
+                    <i data-lucide="search" class="w-5 h-5 stroke-[2.5]"></i>
+                    <i data-lucide="bell" class="w-5 h-5 stroke-[2.5]"></i>
+                </div>
+            </header>
+
+            <template x-for="post in posts" :key="post.id">
+                <div class="px-[20px] post-gap"> 
+                    
+                    <div class="flex items-center gap-2 mb-2 relative z-40">
+                        <div class="relative">
+                            <div class="w-10 h-10 rounded-full overflow-hidden relative">
+                                <img :src="post.avatar" loading="lazy" class="w-full h-full object-cover">
+                            </div>
+                            <div class="absolute -top-2 -right-2 text-gray-200 text-xl rotate-12">...</div> 
+                        </div>
+                        <div class="flex flex-col">
+                            <div class="flex items-baseline gap-[6px]">
+                                <span class="font-bold text-[15px] text-black" x-text="post.name"></span>
+                                <span class="text-[#A4A4A4] text-[13px] font-medium" x-text="post.time"></span>
+                            </div>
+                            <p class="font-hand text-[#A4A4A4] text-[15px] leading-5 mt-[1px]" x-text="post.caption"></p>
+                        </div>
+                        <div class="ml-auto text-[#A4A4A4]">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-[20px] h-[20px]"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+                        </div>
+                    </div>
+
+                    <div class="relative w-full h-[335px] mt-2">
+                        <div class="absolute top-0 left-6 opacity-60 rotate-[-22deg] z-0"><img src="https://i.postimg.cc/w3w4M5RT/sticker-sun.png" class="w-[63px] h-auto"></div>
+                        <div class="absolute top-[-3px] right-1 z-0"><img src="https://i.postimg.cc/k4XWTr2n/lightbulb.png" class="w-[27px] h-auto"></div>
+                        <div class="absolute top-8 right-2 opacity-60 rotate-[-20deg] z-0"><img src="https://i.postimg.cc/jCM326nK/sticker-bread.png" class="w-[65px] h-auto"></div>
+                        <div class="absolute bottom-[65px] left-[-4px] opacity-60 rotate-[-66deg] z-0"><img src="https://i.postimg.cc/jCM326nK/sticker-bread.png" class="w-[70px] h-auto"></div>
+                        <div class="absolute -bottom-[-25px] left-[20px] opacity-60 rotate-[-22deg] z-0"><img src="https://i.postimg.cc/K40pj73m/sticker-map.png" class="w-[57px] h-auto"></div>
+                        <div class="absolute bottom-[-25px] left-[10px] z-0 rotate-[0deg]"><img src="https://i.postimg.cc/PJJz5GH8/cup.png" class="w-[32px] h-auto"></div>
+
+                        
+<div :class="getWrapperClass(post, 'bgImage1')"
+     :style="getWrapperStyle(post, 'bgImage1')"
+     @click="triggerSwap(post, 'bgImage1')">
+    <img :src="post.bgImage1" class="w-full h-full object-cover transition-opacity duration-500"
+         :class="getImageClass(post, 'bgImage1')">
+</div>
+
+<div :class="getWrapperClass(post, 'bgImage2')"
+     :style="getWrapperStyle(post, 'bgImage2')"
+     @click="triggerSwap(post, 'bgImage2')">
+    <img :src="post.bgImage2" class="w-full h-full object-cover transition-opacity duration-500"
+         :class="getImageClass(post, 'bgImage2')">
+</div>
+
+<div :class="getWrapperClass(post, 'mainImage')"
+     :style="getWrapperStyle(post, 'mainImage')"
+     @click="triggerSwap(post, 'mainImage')">
+    <img :src="post.mainImage" class="w-full h-full object-cover transition-opacity duration-500"
+         :class="getImageClass(post, 'mainImage')">
+</div>
+
+<template x-for="s in post.smashed" :key="s.id">
+    <div :class="[
+            s.isFading ? 'smash-fade-out' : '',
+            // 如果是 AI 图，使用通用逻辑；如果是普通贴纸，用弹跳动画
+            s.type === 'ai-generated' ? getWrapperClass(post, s.id) : 'absolute z-[60] pointer-events-none animate-smash'
+         ]"
+         :style="s.type === 'ai-generated' ? getWrapperStyle(post, s.id) : `top: ${s.top}; left: ${s.left}; --smash-rot: ${s.rotate};`"
+         @click="s.type === 'ai-generated' ? triggerSwap(post, s.id) : null"
+    >
+        <template x-if="s.type !== 'ai-generated'">
+            <img :src="s.img" class="w-[60px] h-[60px] object-contain">
+        </template>
+
+        <template x-if="s.type === 'ai-generated'">
+            <div class="w-full h-full relative">
+                <img :src="s.img" @load="s.isImageLoaded = true" x-show="!s.isLoading && s.isImageLoaded" 
+                     class="w-full h-full object-cover absolute inset-0 transition-opacity duration-500"
+                     :class="getImageClass(post, s.id)">
+                
+                <div x-show="s.isLoading || !s.isImageLoaded" 
+     class="absolute inset-0 z-10 flex flex-col items-center justify-center dynamic-placeholder-bg">
+    
+    <div class="relative w-20 h-20 mb-2 flex items-center justify-center transition-transform duration-500 origin-center"
+         :class="isCentered(post, s.id) ? 'scale-100' : 'scale-[0.6]'">
+        
+        <img src="https://i.postimg.cc/c4GVDWFH/Vector-1.png" 
+             class="w-12 h-12 loading-img animate-float-center" 
+             style="z-index: 10;">
+
+        <img src="https://i.postimg.cc/FHD8sLN7/Vector-2.png" 
+             class="w-7 h-7 loading-img animate-float-left" 
+             style="top: 8px; left: 0px; animation-delay: 0.3s;">
+
+        <img src="https://i.postimg.cc/FKzqfHHy/Vector.png" 
+             class="w-7 h-7 loading-img animate-float-right" 
+             style="top: 12px; right: 0px; animation-delay: 0.7s;">
+    </div>
+
+    <span class="text-[12px] text-white font-bold font-rounded animate-loading-text mt-4">
+        creating…
+    </span>
+</div>
+</div>
+        </template>
+    </div>
+</template>
+
+<div class="absolute z-50 pointer-events-none w-[280px] top-[255px] left-[32px] transition-all duration-500 ease-cute rotate-[2deg]"
+     :class="(post.slots.bgImage1 === 'center' || post.slots.bgImage2 === 'center') ? 'opacity-100 scale-100' : 'opacity-0 scale-50'">
+    
+    <div class="absolute inset-0" x-show="post.slots.bgImage1 === 'center'" x-transition>
+        <div style='color: #000; -webkit-text-stroke: 6px #FFF; paint-order: stroke fill; font-weight: 800; text-align: left;'>
+            <span class="text-[20px] leading-tight block font-rounded" x-text="'“' + post.bg1Text + '”'"></span>
+        </div>
+        <div class="flex items-center gap-1 mt-2 ml-10">
+            <img :src="post.comments[0].avatar" class="w-4 h-4 rounded-full object-cover shadow-sm">
+            <span class="text-white/85 text-[12px] font-medium" x-text="post.comments[0].user"></span>
+        </div>
+    </div>
+
+    <div class="absolute inset-0" x-show="post.slots.bgImage2 === 'center'" x-transition>
+        <div style='color: #000; -webkit-text-stroke: 6px #FFF; paint-order: stroke fill; font-weight: 800; text-align: left;'>
+            <span class="text-[20px] leading-tight block font-rounded" x-text="'“' + post.bg2Text + '”'"></span>
+        </div>
+        <div class="flex items-center gap-1 mt-2 ml-10">
+            <img :src="post.comments[1].avatar" class="w-4 h-4 rounded-full object-cover shadow-sm">
+            <span class="text-white/85 text-[12px] font-medium" x-text="post.comments[1].user"></span>
+        </div>
+    </div>
+</div>
+
+                        <div class="absolute top-4 left-1/2 -translate-x-1/2 w-[240px] h-[304px] z-50 rotate-[2deg] transition-all duration-500 ease-cute"
+     :class="isCentered(post, 'mainImage') ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'">
+                            <div class="absolute top-[45px] -right-[38px] rotate-12 cursor-pointer jelly-bounce" @click="handleSmash(post, 'joyful')">
+                                <img src="https://i.postimg.cc/SRkfFX1S/joyful.png" class="w-[73px] h-auto">
+                                <template x-if="post.reactions.joyful > 0">
+                                    <div class="absolute -bottom-[-32px] -right-[-20px] number-stroke" x-text="post.reactions.joyful"></div>
+                                </template>
+                            </div>
+                            <div class="absolute bottom-[20px] -right-[35px] -rotate-[20deg] z-30 cursor-pointer jelly-bounce" @click="handleSmash(post, 'croissant')">
+                                <img src="https://i.postimg.cc/jdq4M7Jj/croissant.png" class="w-[90px] h-auto">
+                                <template x-if="post.reactions.croissant > 0">
+                                    <div class="absolute -bottom-[-32px] -right-[-27px] number-stroke" x-text="post.reactions.croissant"></div>
+                                </template>
+                            </div>
+                            <div class="absolute top-[98px] -left-[30px] z-30 -rotate-12 cursor-pointer jelly-bounce" @click="handleSmash(post, 'drink')">
+                                <img src="https://i.postimg.cc/C1mz5zMc/drink.png" class="w-[73px] h-auto">
+                                <template x-if="post.reactions.drink > 0">
+                                    <div class="absolute -bottom-[-31px] -right-[-18px] number-stroke" x-text="post.reactions.drink"></div>
+                                </template>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-col items-center justify-center mt-[-6px] relative z-50 rotate-[2deg]">
+                        <div class="flex items-center justify-start gap-[10px] mb-[14px] pl-2 origin-bottom">
+                            <template x-for="interactor in post.interactors">
+                                <div class="relative">
+                                    <div class="w-[26px] h-[26px] rounded-full overflow-hidden">
+                                        <img :src="interactor.avatar" loading="lazy" class="w-full h-full object-cover">
+                                    </div>
+                                    <div class="absolute -bottom-1 -right-1 w-[18px] flex items-center justify-center">
+                                        <img :src="interactor.icon" class="w-full h-auto">
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                        <div class="flex items-start gap-[6px] translate-x-[12px]">
+                            <div class="w-[245px] min-h-[96px] h-auto pt-[12px] pr-[12px] pb-[12px] pl-[14px] flex flex-col justify-start gap-[6px] rounded-[20px] border-[0.5px] border-black/10 bg-white/50 backdrop-blur-[10px]">
+    <template x-for="comment in post.comments">
+        <div class="flex items-start justify-between gap-2"> <p class="text-[13px] leading-tight text-gray-900 pr-2">
+                <span class="font-semibold" x-text="comment.user + ':'"></span>
+                <span x-html="comment.text"></span>
+            </p>
+                                        <div class="w-[22px] h-[22px] rounded-[8px] overflow-hidden flex-shrink-0 bg-black/10 flex items-center justify-center">
+    <img :src="comment.avatar" 
+         x-show="comment.avatar" 
+         class="w-full h-full object-cover transition-opacity duration-300">
+    
+    <div x-show="!comment.avatar" class="w-full h-full"></div>
+</div>
+                                    </div>
+                                </template>
+                            </div>
+                            <div @click="openComment(post)" 
+                                 class="w-[36px] h-[36px] rounded-[14px] bg-white/50 backdrop-blur-[10px] border-[0.563px] border-black/10 flex items-center justify-center cursor-pointer transition active:scale-90 active:bg-black/3">
+                                <img src="https://i.postimg.cc/8kffG876/icon-comment.png" class="w-5 h-5 object-contain">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </template>
+        </div>
+
+        <div class="absolute bottom-8 left-1/2 -translate-x-1/2 w-[92%] z-[70]">
+            <div class="bg-white/70 backdrop-blur-xl rounded-[35px] px-6 py-3 flex justify-between items-end shadow-[0_10px_40px_-10px_rgba(0,0,0,0.1)] border border-white/50">
+                <div class="flex flex-col items-center gap-1 opacity-50 hover:opacity-100 transition cursor-pointer"><div class="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center shadow-inner"><i data-lucide="camera" class="w-5 h-5 text-gray-600"></i></div><span class="text-[9px] font-[800] text-gray-500 tracking-wide">camera</span></div>
+                <div class="flex flex-col items-center gap-1 -mt-4 cursor-pointer"><div class="w-14 h-14 bg-gradient-to-tr from-blue-100 to-white rounded-full flex items-center justify-center shadow-xl border-[3px] border-white relative overflow-hidden group"><div class="text-[32px] group-hover:scale-110 transition duration-300">🌍</div><div class="absolute top-0 left-0 w-full h-1/2 bg-white/40 blur-sm"></div></div><span class="text-[10px] font-black text-black tracking-wide">moments</span><div class="w-1 h-1 bg-black rounded-full mt-0.5"></div></div>
+                <div class="flex flex-col items-center gap-1 opacity-50 hover:opacity-100 transition cursor-pointer"><div class="w-10 h-10 bg-gradient-to-b from-blue-50 to-purple-50 rounded-full flex items-center justify-center shadow-inner"><div class="text-xl">💬</div></div><span class="text-[9px] font-[800] text-gray-500 tracking-wide">chats</span></div>
+                <div class="flex flex-col items-center gap-1 opacity-50 hover:opacity-100 transition cursor-pointer"><div class="w-10 h-10 rounded-full p-0.5 border border-gray-300"><img src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100" class="w-full h-full rounded-full object-cover"></div><span class="text-[9px] font-[800] text-gray-500 tracking-wide">me</span></div>
+            </div>
+        </div>
+        <div class="absolute bottom-2 left-1/2 -translate-x-1/2 w-32 h-1 bg-black rounded-full z-[80]"></div>
+
+        <div class="absolute inset-0 z-[100] flex flex-col justify-end" 
+             x-show="isCommenting" 
+             style="display: none;" 
+             x-transition:enter="transition ease-out duration-300"
+             x-transition:enter-start="translate-y-full"
+             x-transition:enter-end="translate-y-0"
+             x-transition:leave="transition ease-in duration-200"
+             x-transition:leave-start="translate-y-0"
+             x-transition:leave-end="translate-y-full">
+            
+            <div class="absolute inset-0" @click="isCommenting = false"></div>
+
+            <div class="relative w-full rounded-t-[36px] overflow-hidden bg-white shadow-[0_24px_120px_0_rgba(0,0,0,0.16)] flex flex-col">
+                <div class="absolute inset-1.5 custom-dash-border rounded-[31px] pointer-events-none z-0"></div>
+
+                <div class="relative z-10 flex flex-col">
+                    <div class="pl-3 pr-5 pt-3.5 pb-1.5 flex items-center gap-[-0.5] relative z-20">
+                        <div class="w-16 h-16 overflow-hidden flex-shrink-0">
+                            <img src="https://i.postimg.cc/ZRzxpQMt/comment-id.png" class="w-full h-full object-cover">
+                        </div>
+                        <div class="flex-1 flex items-center overflow-hidden">
+                            <div x-show="commentText.length === 0" class="w-[2px] h-5 bg-black animate-pulse mr-0.3 flex-shrink-0"></div> 
+                            <span class="text-[16px] font-semibold truncate" 
+                                  :class="commentText.length > 0 ? 'text-black' : 'text-[#a4a4a4]'"
+                                  x-text="commentText.length > 0 ? commentText : 'add comment...'">
+                            </span>
+                            <div x-show="commentText.length > 0" class="w-[2px] h-5 bg-black animate-pulse ml-0.3 flex-shrink-0"></div>
+                        </div>
+                       <div class="w-9 h-9 rounded-full bg-black flex items-center justify-center active:scale-90 transition cursor-pointer flex-shrink-0" 
+     @click="handleAiSend()">
+    <i data-lucide="arrow-up" class="w-5 h-5 text-white stroke-[3]"></i>
+</div>
+                    </div>
+
+                    <div class="bg-[#f2f2f2] rounded-[27px] pt-2 pb-8 relative z-10">
+                        <div class="flex justify-between px-6 py-2 mb-2">
+                            <span class="text-[17px] font-normal text-black cursor-pointer active:opacity-50" @click="commentText += 'Hello '">Hello</span>
+                            <span class="text-[17px] font-normal text-black cursor-pointer active:opacity-50" @click="commentText += 'world '">world</span>
+                            <span class="text-[17px] font-normal text-black cursor-pointer active:opacity-50" @click="commentText += 'lol '">lol</span>
+                        </div>
+
+                        <div class="px-1.5 flex flex-col gap-3 select-none">
+                            <div class="flex justify-center gap-1.5">
+                                <template x-for="key in ['q','w','e','r','t','y','u','i','o','p']">
+                                    <div class="w-[32px] h-[42px] bg-white rounded-[9px] flex items-center justify-center text-[22px] text-[#595959] font-normal cursor-pointer key-active" x-text="key" @click="commentText += key"></div>
+                                </template>
+                            </div>
+                            <div class="flex justify-center gap-1.5 px-4">
+                                <template x-for="key in ['a','s','d','f','g','h','j','k','l']">
+                                    <div class="w-[32px] h-[42px] bg-white rounded-[9px] flex items-center justify-center text-[22px] text-[#595959] font-normal cursor-pointer key-active" x-text="key" @click="commentText += key"></div>
+                                </template>
+                            </div>
+                            <div class="flex justify-center gap-3 px-1">
+                                <div class="w-[42px] h-[42px] bg-white rounded-[9px] flex items-center justify-center cursor-pointer key-special-active"><i data-lucide="arrow-big-up" class="w-6 h-6 text-[#595959]"></i></div>
+                                <div class="flex gap-1.5">
+                                    <template x-for="key in ['z','x','c','v','b','n','m']">
+                                        <div class="w-[32px] h-[42px] bg-white rounded-[9px] flex items-center justify-center text-[22px] text-[#595959] font-normal cursor-pointer key-active" x-text="key" @click="commentText += key"></div>
+                                    </template>
+                                </div>
+                                <div class="w-[42px] h-[42px] bg-white rounded-[9px] flex items-center justify-center cursor-pointer key-special-active" @click="commentText = commentText.slice(0, -1)"><i data-lucide="delete" class="w-5 h-5 text-[#595959]"></i></div>
+                            </div>
+                            <div class="flex justify-between px-1 mt-1">
+                                <div class="w-[88px] h-[42px] bg-white rounded-[9px] flex items-center justify-center text-[16px] font-medium text-[#595959] cursor-pointer key-special-active">ABC</div>
+                                <div class="flex-1 mx-2 h-[42px] bg-white rounded-[9px] cursor-pointer key-active" @click="commentText += ' '"></div>
+                                <div class="w-[88px] h-[42px] bg-white rounded-[9px] flex items-center justify-center text-[16px] font-medium text-[#595959] cursor-pointer key-special-active"
+     @click="handleAiSend()">
+    <span>Send</span>
+</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        lucide.createIcons();
+        function feedData() {
+            return {
+                init() {
+                    this.posts = this.posts.map(post => ({
+                        ...post,
+                        reactions: { joyful: 0, croissant: 0, drink: 0 },
+                        smashed: [],
+		coords: {}
+                    }));
+                },
+                isCommenting: false,
+                commentText: '',
+                isGenerating: false,
+                activePost: null,
+
+                // 打开评论框，记录当前的 post
+                openComment(post) {
+                    this.activePost = post;
+                    this.isCommenting = true;
+                    this.commentText = '';
+                },
+getWrapperClass(post, key) {
+    // ✅ 1. 必须先定义这些变量
+    const isSlotted = !!post.slots[key];
+    
+    // ✅ 2. 基础样式：绝对定位、白底、圆角、阴影，以及简化的 transition
+    let classes = "absolute bg-white overflow-hidden transition-all duration-500 ease-cute cursor-pointer rounded-[24px] ";
+    
+    if (isSlotted) {
+        // 在槽位里，叠加 slotStyles 里的定位和尺寸
+        return classes + (this.slotStyles[post.slots[key]] || '');
+    } else {
+let floatingClasses = "z-20 w-[140px] h-[177px]";
+        if (key.toString().startsWith('ai_')) {
+            floatingClasses += " animate-smash";
+        }
+        // 不在槽位（悬浮态），给固定尺寸 z-20
+        return classes + "z-20 w-[140px] h-[177px]";
+    }
+},
+
+// 2. 专门负责计算位置 Style (控制 Top/Left/Rotate)
+getWrapperStyle(post, key) {
+    // 如果在槽位里，不需要 style，CSS class 会接管
+    if (post.slots[key]) return '';
+
+    // 如果不在槽位，必须有坐标。如果没有坐标(异常情况)，随机生成一个防止重叠
+    let coords = post.coords[key];
+    if (!coords) {
+        // 兜底逻辑：万一没坐标，给个随机的，防止堆在左上角 (0,0)
+        coords = {
+            top: (Math.random() * 50 + 20) + '%',
+            left: (Math.random() * 60 + 20) + '%',
+            rotate: (Math.random() * 30 - 15) + 'deg'
+        };
+        post.coords[key] = coords; // 存回去
+    }
+    
+    return `top: ${coords.top}; left: ${coords.left}; --smash-rot: ${coords.rotate}; transform: rotate(${coords.rotate});`;
+},
+
+// 3. 专门负责计算图片的 Opacity (控制透明度)
+getImageClass(post, key) {
+    // 只有在正中间 (center) 时才是完全不透明，其他情况(侧边或悬浮)都半透明
+    return post.slots[key] === 'center' ? 'opacity-100' : 'opacity-70';
+},
+
+                // 【核心逻辑】请求 Nano Banana 后端
+               // 核心逻辑：即时贴上 placeholder，异步替换图片
+// 约第 191 行
+async handleAiSend() {
+                    if (!this.activePost || !this.commentText.trim()) return;
+                    
+                    const promptText = this.commentText;
+                    const targetPost = this.activePost;
+                    const tempStickerId = 'ai_' + Date.now(); // 给 AI 图片一个唯一的 Slot ID
+
+                    // 1. 创建评论：初始 avatar 设为 null，表示正在生成
+                    const newComment = {
+                        user: 'yeyelin',
+                        text: promptText,
+                        avatar: null, // <--- 关键：先设为 null，方便 HTML 显示加载态
+                        isAiThumbnail: true // 标记这是 AI 评论
+                    };
+                    targetPost.comments.unshift(newComment);
+
+                    this.isCommenting = false;
+                    this.commentText = '';
+
+                    // 2. 【你的核心坐标逻辑 - 绝对不丢】
+                    const isTopZone = Math.random() > 0.5; 
+                    let randomTop;
+                    if (isTopZone) {
+                        randomTop = (Math.random() * 10) + '%';
+                    } else {
+                        randomTop = (Math.random() * 10 + 35) + '%';
+                    }
+
+                    const side = Math.random();
+                    let randomLeft;
+                    if (side < 0.5) {
+                        randomLeft = (Math.random() * 10 - 5) + '%';
+                    } else {
+                        randomLeft = (Math.random() * 10 + 55) + '%';
+                    }
+
+targetPost.coords[tempStickerId] = {
+    top: randomTop,
+    left: randomLeft,
+    rotate: (Math.random() * 30 - 15) + 'deg'
+};
+
+                    // 4. 压入贴纸数组
+                    targetPost.smashed.push({
+    id: tempStickerId,
+    type: 'ai-generated',
+    img: '',
+    isLoading: true,
+    isImageLoaded: false,
+    isSlotted: false,   // ✅ 关键：初始是不入槽的，所以不会跑到 left/right 位置
+    top: randomTop,     // 使用你的随机坐标
+    left: randomLeft,
+    rotate: (Math.random() * 20 - 10) + 'deg',
+    isFading: false
+});
+
+                    try {
+                        const response = await fetch('https://moments-backend-5ojs.onrender.com/generate', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                prompt: `${promptText}, context: ${targetPost.imageContent}`,
+                                faceUrl: "https://i.postimg.cc/BZMvRVGn/Screenshot-2026-02-11-at-2-06-33-AM.png"
+                            })
+                        });
+                        const data = await response.json();
+                        // ... 在 if (data.url) 内部 ...
+if (data.url) {
+    const sticker = targetPost.smashed.find(item => item.id === tempStickerId);
+    if (sticker) {
+        sticker.img = data.url;
+        sticker.isLoading = false; 
+        
+        // ✅ 关键修改：直接修改评论数组中第一项（刚发出的那条）的 avatar
+        // 这样可以确保 Alpine 监听到数组内容的变更
+        targetPost.comments[0].avatar = data.url; 
+    }
+}
+                    } catch (error) {
+                        console.error(error);
+                        targetPost.smashed = targetPost.smashed.filter(item => item.id !== tempStickerId);
+                    }
+                },
+
+                // 【恢复 UI】将 AI 图片连带用户信息一起贴上去
+                addStickerToPost(imgUrl, text) {
+                    const stickerId = Date.now();
+                    // 随机位置
+                    const t = (Math.random() * 50 + 25) + '%';
+                    const l = (Math.random() * 50 + 15) + '%';
+
+                    const s = {
+                        id: stickerId,
+                        type: 'ai-generated', 
+                        img: imgUrl,
+                        originText: text, // 保存用户输入的文字用于显示
+                        top: t, left: l, 
+                        rotate: (Math.random() * 20 - 10) + 'deg',
+                        isFading: false 
+                    };
+                    this.activePost.smashed.push(s);
+                },
+
+                handleSmash(post, type) {
+                    post.reactions[type]++; 
+                    const imgMap = {
+                        joyful: 'https://i.postimg.cc/w3w4M5RT/sticker-sun.png',
+                        croissant: 'https://i.postimg.cc/jCM326nK/sticker-bread.png',
+                        drink: 'https://i.postimg.cc/K40pj73m/sticker-map.png'
+                    };
+                    
+                    let t, l, attempts = 0;
+                    const isTooClose = (nt, nl) => {
+                        return post.smashed.some(s => {
+                            const dt = parseFloat(nt) - parseFloat(s.top);
+                            const dl = parseFloat(nl) - parseFloat(s.left);
+                            return Math.sqrt(dt*dt + dl*dl) < 12; 
+                        });
+                    };
+
+                    do {
+                        const side = Math.floor(Math.random() * 4);
+                        if (side === 0) { t = (Math.random() * 4 - 3) + '%'; l = (Math.random() * 60 + 20) + '%'; }
+                        else if (side === 1) { t = (Math.random() * 4 + 86) + '%'; l = (Math.random() * 60 + 20) + '%'; }
+                        else if (side === 2) { l = (Math.random() * 4 - 3) + '%'; t = (Math.random() * 60 + 20) + '%'; }
+                        else { l = (Math.random() * 4 + 86) + '%'; t = (Math.random() * 60 + 20) + '%'; }
+                        attempts++;
+                    } while (isTooClose(t, l) && attempts < 15);
+
+                    const stickerId = Date.now() + Math.random();
+                    const s = {
+                        id: stickerId,
+                        type: type,
+                        img: imgMap[type],
+                        top: t, left: l, 
+                        rotate: (Math.random() * 60 - 30) + 'deg',
+                        isFading: false
+                    };
+                    
+                    post.smashed.push(s);
+
+                    setTimeout(() => {
+                        const target = post.smashed.find(item => item.id === stickerId);
+                        if (target) target.isFading = true;
+                    }, 2000);
+                },
+                slotStyles: {
+    // ✅ center：保留白色外发光
+    center: 'top-4 left-1/2 -translate-x-1/2 w-[240px] h-[304px] rotate-[2deg] z-30 rounded-[36px] border-[2px] border-white shadow-[0_0_15px_5.538px_rgba(255,255,255,0.80)] transition-all',
+    
+    // ✅ left：删掉 shadow 相关类名，使其换回去后没有阴影
+    left: 'top-[55px] left-[9px] w-[140px] h-[178px] rotate-[-7deg] z-10 rounded-[24px] transition-all',
+    
+    // ✅ right：删掉 shadow 相关类名
+    right: 'top-[85px] -right-[-10px] w-[140px] h-[177.69px] rotate-[13deg] z-10 rounded-[24px] transition-all',
+    
+    default: 'top-[50%] left-[50%] -translate-x-1/2 -translate-y-1/2 w-[120px] h-[150px] rotate-0 z-0 opacity-50 border-[2px] border-white transition-all'
+},
+                getSlotStyles(post, key) { return this.slotStyles[post.slots[key]]; },
+                isCentered(post, key) { return post.slots[key] === 'center'; },
+               triggerSwap(post, clickedKey) {
+    // 1. 如果点的是中间图，不动
+    if (post.slots[clickedKey] === 'center') return;
+
+    post.hasInteracted = true;
+    
+    // 如果是 AI 图，标记为已点击
+    if (clickedKey.toString().startsWith('ai_')) {
+        const aiSticker = post.smashed.find(s => s.id === clickedKey);
+        if (aiSticker) aiSticker.isSlotted = true;
+    }
+
+    const centerKey = Object.keys(post.slots).find(k => post.slots[k] === 'center');
+    const clickedSlot = post.slots[clickedKey];
+
+    if (clickedSlot) {
+        // A. 点击了左/右固定图 -> 直接互换身份
+        post.slots[centerKey] = clickedSlot;
+        post.slots[clickedKey] = 'center';
+    } else {
+        // B. 点击了悬浮图 -> 挤压互换
+        
+        // 1. 获取悬浮图的坐标
+        // 关键修复：如果没有坐标，先造一个，防止报错
+        if (!post.coords[clickedKey]) {
+             post.coords[clickedKey] = { top: '50%', left: '50%', rotate: '0deg' };
+        }
+        
+        // 2. 关键修复：使用 {...} 进行克隆，断开引用联系
+        // 让原中心图 (centerKey) 继承 悬浮图 (clickedKey) 的坐标
+        if (centerKey) {
+            post.coords[centerKey] = { ...post.coords[clickedKey] }; 
+            delete post.slots[centerKey]; // 把原中心图踢出插槽，变成悬浮
+        }
+
+        // 3. 悬浮图上位
+        post.slots[clickedKey] = 'center';
+    }
+},
+
+                posts: [
+                    {
+                        id: 1, name: 'gill', time: '11:14 am', 
+                        slots: { mainImage: 'center', bgImage1: 'left', bgImage2: 'right' },
+                        bg1Text: "look at my giant cookie", bg2Text: "omg i want that too",
+                        avatar: 'https://i.postimg.cc/k5YDNdsQ/Rectangle-2131354577.png',
+                        caption: '"current mood: butter late than never."',
+                        mainImage: 'https://i.postimg.cc/dtQPFTws/canvas.png',
+		imageContent: "eating a croissant in a warm lighting coffee shop",
+                        bgImage1: 'https://i.postimg.cc/90RFfzqD/img2.png',
+                        bgImage2: 'https://i.postimg.cc/T1JG1m32/img3.png',
+                        interactors: [
+                            { avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100', icon: 'https://i.postimg.cc/v1ZYdLpX/icon-croissant.png' },
+                            { avatar: 'https://images.unsplash.com/photo-1599566150163-29194dcaad36?w=100', icon: 'https://i.postimg.cc/1g3mZcLW/icon-sun.png' },
+                            { avatar: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=100', icon: 'https://i.postimg.cc/v1ZYdLpX/icon-croissant.png' },
+                            { avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100', icon: 'https://i.postimg.cc/1g3mZcLW/icon-sun.png' },
+                            { avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100', icon: 'https://i.postimg.cc/3yx8HCPn/icon-map.png' }
+                        ],
+                        comments: [
+                            { user: 'ubi', text: 'look at my giant croissant', avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=100' },
+                            { user: 'sierra', text: 'omg i want that too', avatar: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=100' },
+                            { user: 'jason18', text: '<span class="text-[#EF4444]">❤️❤️❤️</span>', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100' }
+                        ]
+                    },
+                    {
+                        id: 2, name: 'zay anderson', time: '10:09 pm', 
+                        slots: { mainImage: 'center', bgImage1: 'left', bgImage2: 'right' },
+                        bg1Text: "coffee time! ☕", bg2Text: "nice atmosphere",
+                        avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100',
+                        caption: '"calculus can wait, the city can\'t"',
+                        mainImage: 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=600',
+                        bgImage1: 'https://images.unsplash.com/photo-1519125323398-675f0ddb6308?w=300',
+                        bgImage2: 'https://images.unsplash.com/photo-1496449903678-68ddcb189a24?w=300',
+                        interactors: [
+                            { avatar: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=100', icon: 'https://i.postimg.cc/v1ZYdLpX/icon-croissant.png' },
+                            { avatar: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=100', icon: 'https://i.postimg.cc/1g3mZcLW/icon-sun.png' },
+                            { avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=100', icon: 'https://i.postimg.cc/v1ZYdLpX/icon-croissant.png' },
+                            { avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100', icon: 'https://i.postimg.cc/1g3mZcLW/icon-sun.png' },
+                            { avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100', icon: 'https://i.postimg.cc/3yx8HCPn/icon-map.png' }
+                        ],
+                        comments: [
+                            { user: 'luna', text: 'coffee time! ☕', avatar: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=100' },
+                            { user: 'mike', text: 'nice atmosphere', avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100' },
+                            { user: 'sarah', text: '<span class="text-[#EF4444]">🔥🔥🔥</span>', avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100' }
+                        ]
+                    }
+                ]
+            }
+        }
+    </script>
+</body>
+</html>
